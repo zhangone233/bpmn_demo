@@ -30,11 +30,15 @@ import paletteEntries from '../custom/palette/config/paletteEntries'
 
 import customRenderer from '../custom/renderer'
 
+import Panel from '../components/panel/panel';
+
 class BpmnModelerApp extends React.Component {
   constructor() {
     super();
 
-    this.BpmnModeler = null;
+    this.state = {
+      BpmnModeler: null,
+    }
   }
 
   componentDidMount() {
@@ -47,17 +51,17 @@ class BpmnModelerApp extends React.Component {
     const index = modules.findIndex(it => it.paletteProvider)
     modules.splice(index, 1)
 
-    this.BpmnModeler = new BpmnModeler({
+    const bpmnModeler = new BpmnModeler({
       container: '#canvas',
       paletteEntries, // 引入工具栏配置 (自定义)
-      propertiesPanel: {
-        parent: '#properties-panel',
-      },
+      // propertiesPanel: {
+      //   parent: '#properties-panel',
+      // },
       additionalModules: [
         customPalette,
         customRenderer,
         propertiesPanelModule,
-        propertiesProviderModule
+        // propertiesProviderModule
       ],
       moddleExtensions: {
         //如果要在属性面板中维护camunda：XXX属性，则需要此 
@@ -66,24 +70,30 @@ class BpmnModelerApp extends React.Component {
       }
     });
 
-    await this.BpmnModeler.importXML(getDefaultXml());
+    await bpmnModeler.importXML(getDefaultXml());
     // 调整在正中间
-    this.BpmnModeler.get('canvas').zoom('fit-viewport', 'auto')
-    this.addEventListener()
-  }
-
-  addEventListener = () => {
-    this.BpmnModeler.on('element.changed', (e) => {
-      console.log('element.changed触发',e);
+    bpmnModeler.get('canvas').zoom('fit-viewport', 'auto')
+    this.addEventListener(bpmnModeler)
+    this.setState({
+      bpmnModeler,
     })
   }
 
+  addEventListener = (bpmnModeler) => {
+
+    // bpmnModeler.on('command.changed', (e) => {
+    //   console.log('command.changed触发',e);
+    // })
+  }
+
   render() {
+    const { bpmnModeler } = this.state;
 
     return (
       <div className="container">
         <div id="properties-panel" className="panel" />
         <div id='canvas'/>
+        <Panel bpmnModeler={bpmnModeler} />
       </div>
     )
   }

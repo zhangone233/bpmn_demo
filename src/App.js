@@ -1,6 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
 import BpmnModelerApp from './pages/BpmnModeler/BpmnModeler';
+import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'
+import "highlight.js/styles/atom-one-dark-reasonable.css";
 
 function App() {
   return (
