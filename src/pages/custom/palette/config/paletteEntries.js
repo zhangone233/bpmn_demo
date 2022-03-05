@@ -15,21 +15,42 @@ const HIGH_PRIORITY = 1500,
       TASK_BORDER_RADIUS = 2;
 
 export default {
+  // 自定义panel
   'create.start-event': createAction(
     'bpmn:StartEvent',
     'event',
     'bpmn-icon-start-event-none',
     'Create StartEvent'
   ),
-  'create.task': createAction(
+  'create.task2': createAction(
     'bpmn:Task',
-    'activity',
+    'activity2',
     // 'bpmn-icon-task',
-    'bpmn-icon-task-custom', // 🙋‍♂️ 使用图片后，记得修改成自己的类名
+    'bpmn-icon-task-2', // 🙋‍♂️ 使用图片后，记得修改成自己的类名
     'Create Task',
     require('../../../assets/imgs/task.png'), // 使用图片
     drawShape, //增加一个 drawShape 功能，也就是将创建 SVG 的工作交给 paletteEntries.js 实现
-  )
+  ),
+
+  // 自带的
+  'create.task3': createAction(
+    'bpmn:Task',
+    'activity3',
+    // 'bpmn-icon-task',
+    'bpmn-icon-task-3', // 🙋‍♂️ 使用图片后，记得修改成自己的类名
+    'Create Task',
+    require('../../../assets/imgs/douyin_icon.png'), // 使用图片
+    drawShape, //增加一个 drawShape 功能，也就是将创建 SVG 的工作交给 paletteEntries.js 实现
+  ),
+  'create.task4': createAction(
+    'bpmn:Task',
+    'activity4',
+    // 'bpmn-icon-task',
+    'bpmn-icon-task-4', // 🙋‍♂️ 使用图片后，记得修改成自己的类名
+    'Create Task',
+    require('../../../assets/imgs/douyin_icon.png'), // 使用图片
+    drawShape, //增加一个 drawShape 功能，也就是将创建 SVG 的工作交给 paletteEntries.js 实现
+  ),
 }
 
 function createAction(type, group, className, title, imageUrl = '', drawShape) {

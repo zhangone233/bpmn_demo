@@ -61,7 +61,7 @@ class Form extends React.PureComponent {
         const { id, name, age } = elementBaseInfo;
 
         return (
-            <Card style={{ width: 300 }}>
+            <Card style={{ width: '100%' }}>
                 <Row gutter={[0, 10]}>
                     <Col span={24}>
                         <h2>{id || "未知"}</h2>
