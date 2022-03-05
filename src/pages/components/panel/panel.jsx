@@ -76,6 +76,8 @@ class Panel extends React.PureComponent {
         bpmnModeler.on("selection.changed", ({ newSelection }) => {
             console.log("切换了选中激活节点");
 
+            console.log(newSelection[0], 'newSelection');
+
             this.initFormOnChanged(newSelection[0] || null);
         });
 
@@ -84,7 +86,7 @@ class Panel extends React.PureComponent {
 
             const { elementInfo } = this.state.bpmnInstancesContext;
 
-            if(process.env.NODE_ENV === 'development') {
+            if (process.env.NODE_ENV === "development") {
                 bpmnModeler.saveXML({ format: true }).then(xmlObj => {
                     this.setState({
                         xml: xmlObj.xml,

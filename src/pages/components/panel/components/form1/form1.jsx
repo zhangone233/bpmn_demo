@@ -21,12 +21,13 @@ class Form extends React.PureComponent {
     }
 
     resetBaseInfo = () => {
-        const { elementBusinessObject } = this.context.elementInfo;
-        const elementBaseInfo = JSON.parse(JSON.stringify(elementBusinessObject || {}));
+        // $attrs属性是不可枚举的。  props.elementBusinessObject 已经被JSON.parse过。  从这个对象上获取不到$attrs
+        const { bpmnElement } = this.context.elementInfo;
+        const elementBaseInfo = JSON.parse(JSON.stringify(bpmnElement.businessObject || {}));
 
         Object.assign(
             elementBaseInfo,
-            JSON.parse(JSON.stringify(elementBusinessObject.$attrs || {}))
+            JSON.parse(JSON.stringify(bpmnElement.businessObject.$attrs || {}))
         );
 
         this.setState({
@@ -71,6 +72,7 @@ class Form extends React.PureComponent {
                             <Col span={4}>名字</Col>
                             <Col span={18}>
                                 <Input
+                                    key={id}
                                     placeholder='Basic usage'
                                     defaultValue={name || ""}
                                     onChange={this.onChange}
