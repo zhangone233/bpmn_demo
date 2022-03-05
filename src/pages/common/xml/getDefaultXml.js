@@ -45,7 +45,6 @@ export default function getDefaultXml() {
         targetNamespace="http://bpmn.io/schema/bpmn"
       >
         <bpmn2:process id="Process_1" isExecutable="false">
-          <bpmn2:startEvent id="StartEvent_1"/>
         </bpmn2:process>
         <bpmndi:BPMNDiagram id="BPMNDiagram_1">
           <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
