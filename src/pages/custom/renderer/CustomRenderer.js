@@ -45,7 +45,7 @@ export default class CustomRenderer extends BaseRenderer {
     })
     // 如果传入自定义方法，则回调该方法
     if (shape && shape.drawShape instanceof Function) {
-      return shape.drawShape(parentNode, element, this.bpmnRenderer)
+      return shape.drawShape(parentNode, element, this.bpmnRenderer, shape)
     }
     // 否则调用默认渲染的方法
     return this.bpmnRenderer.drawShape(parentNode, element)

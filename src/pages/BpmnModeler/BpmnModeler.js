@@ -64,12 +64,12 @@ class BpmnModelerApp extends React.Component {
                 customPalette,
                 customRenderer,
                 propertiesPanelModule,
-                // propertiesProviderModule
+                propertiesProviderModule
             ],
 
             moddleExtensions: {
                 //如果要在属性面板中维护camunda：XXX属性，则需要此
-                camunda: camundaModdleDescriptor,
+                // camunda: camundaModdleDescriptor,
 
                 // authority: authorityModdleDescriptor, // 自定义属性面板 tab栏
             },
@@ -109,7 +109,7 @@ class BpmnModelerApp extends React.Component {
                 <div id='properties-panel' className='panel' />
                 <div id='canvas' />
 
-                <Panel bpmnModeler={bpmnModeler} />
+                {/* <Panel bpmnModeler={bpmnModeler} /> */}
             </div>
         );
     }

@@ -90,7 +90,7 @@ function createAction(type, group, className, title, imageUrl = '', drawShape) {
 }
 
 // 这里将 CustomRenderer.js 渲染的方法搬到 paletteEntries
-function drawShape(parentNode, element, bpmnRenderer) {
+function drawShape(parentNode, element, bpmnRenderer, shapeConfig) {
   const shape = bpmnRenderer.drawShape(parentNode, element)
 
   if (is(element, 'bpmn:Task')) {
@@ -100,20 +100,31 @@ function drawShape(parentNode, element, bpmnRenderer) {
     element.width = width
     element.height = height
 
-    // 显示元素的宽高与真实的宽高需要一致
-    const rect = drawRect(
-      parentNode,
+    // // 显示元素的宽高与真实的宽高需要一致
+    // const rect = drawRect(
+    //   parentNode,
+    //   width,
+    //   height,
+    //   TASK_BORDER_RADIUS,
+    //   '#52B415'
+    // )
+
+    // prependTo(rect, parentNode)
+
+    // svgRemove(shape)
+
+    // return shape
+
+    const customIcon = svgCreate('image', { // 在这里创建了一个image
       width,
       height,
-      TASK_BORDER_RADIUS,
-      '#52B415'
-    )
+      href: shapeConfig.imageUrl,
+      transform: 'scale(0.8, 0.8)'
+    })
 
-    prependTo(rect, parentNode)
+    svgAppend(parentNode, customIcon)
 
-    svgRemove(shape)
-
-    return shape
+    return customIcon
   }
 
   const rect = drawRect(parentNode, 30, 20, TASK_BORDER_RADIUS, '#cc0000')
