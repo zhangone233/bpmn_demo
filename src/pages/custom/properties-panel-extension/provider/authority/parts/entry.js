@@ -26,7 +26,8 @@ export const entryConfig = {
       hiddenConfig: {
         dependField: 'select', // 显隐关联的其它字段的名字
         dependValue: '2', // 上面select选择value为2时，隐藏此输入框
-      }
+      },
+      defaultValue: '默认内容'
     }
   ],
 }

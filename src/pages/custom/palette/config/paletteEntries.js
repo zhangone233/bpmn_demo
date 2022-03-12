@@ -61,6 +61,7 @@ function createAction(type, group, className, title, imageUrl = '', drawShape) {
   function createListener(event, autoActivate, elementFactory, create) {
     var shape = elementFactory.createShape({ type })
 
+    console.log(shape,'shape');
     create.start(event, shape)
   }
 

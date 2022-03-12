@@ -57,20 +57,19 @@ class BpmnModelerApp extends React.Component {
             paletteEntries, // 引入工具栏配置 (自定义)
 
             propertiesPanel: {
-              parent: '#properties-panel',
+                parent: "#properties-panel",
             },
 
             additionalModules: [
                 customPalette,
                 customRenderer,
                 propertiesPanelModule,
-                propertiesProviderModule
+                propertiesProviderModule,
             ],
 
             moddleExtensions: {
                 //如果要在属性面板中维护camunda：XXX属性，则需要此
                 // camunda: camundaModdleDescriptor,
-
                 // authority: authorityModdleDescriptor, // 自定义属性面板 tab栏
             },
         });
@@ -96,9 +95,15 @@ class BpmnModelerApp extends React.Component {
     };
 
     bpmnModelerAddEventListener = bpmnModeler => {
-        // bpmnModeler.on('command.changed', (e) => {
-        //   console.log('command.changed触发',e);
-        // })
+        const eventBus = bpmnModeler.get("eventBus");
+
+        // eventBus.on("selection.changed", e => {
+        //   console.log(e, 'selection');
+        // });
+
+        // eventBus.on("element.changed", e => {
+        //     console.log("element.changed触发", e);
+        // });
     };
 
     render() {

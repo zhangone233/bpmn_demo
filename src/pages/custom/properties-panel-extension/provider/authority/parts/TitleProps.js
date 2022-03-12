@@ -1,9 +1,13 @@
 // /parts/TitleProps.js
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 
+import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
+
 import { is } from 'bpmn-js/lib/util/ModelUtil';
 
 import { entryConfig } from './entry';
+
+let init = true;
 
 export default function(group, element, translate) {
   if (is(element, 'bpmn:StartEvent')) { // 可以在这里做类型判断
@@ -25,8 +29,9 @@ export default function(group, element, translate) {
         hidden,
       }
 
-      group.entries.push(entryFactory.selectBox(translate, options));
-    })
+      group.entries.push(entryFactory[item.type](translate, options));
+    });
+
 
     // const selectBoxOptions = {
     //   id : 'select',
