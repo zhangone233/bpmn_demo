@@ -29,6 +29,7 @@ import customPalette from "../custom/palette";
 import paletteEntries from "../custom/palette/config/paletteEntries";
 
 import customRenderer from "../custom/renderer";
+import customRules from "../custom/rules/CustomRules";
 
 import Panel from "../components/panel/panel";
 
@@ -64,7 +65,8 @@ class BpmnModelerApp extends React.Component {
                 customPalette,
                 customRenderer,
                 propertiesPanelModule,
-                propertiesProviderModule
+                propertiesProviderModule,
+                customRules,
             ],
 
             moddleExtensions: {
