@@ -1,91 +1,99 @@
-import BaseRenderer from 'diagram-js/lib/draw/BaseRenderer';
+/* eslint-disable no-unused-vars */
+import inherits from "inherits";
 
-import {
-  find,
-} from 'min-dash';
+import BaseRenderer from "diagram-js/lib/draw/BaseRenderer";
+import { isObject, assign, forEach } from "min-dash";
 import {
   append as svgAppend,
-  attr as svgAttr,
   create as svgCreate,
-  remove as svgRemove
-} from 'tiny-svg';
+  classes as svgClasses,
+} from "tiny-svg";
 
-import {
-  getRoundRectPath
-} from 'bpmn-js/lib/draw/BpmnRenderUtil';
+import { customElements, customConfig, hasLabelElements } from "../../utils/util";
+/**
+ * A renderer that knows how to render custom elements.
+ */
+export default function CustomRenderer(eventBus, styles, textRenderer) {
+  BaseRenderer.call(this, eventBus, 2000);
 
-import { is } from 'bpmn-js/lib/util/ModelUtil';
-import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
+  var computeStyle = styles.computeStyle;
 
-const HIGH_PRIORITY = 1500,
-      TASK_BORDER_RADIUS = 2;
+  function renderLabel(parentGfx, label, options) {
+    options = assign(
+      {
+        size: {
+          width: 100,
+        },
+      },
+      options
+    );
 
+    var text = textRenderer.createText(label || "", options);
 
+    svgClasses(text).add("djs-label");
 
-export default class CustomRenderer extends BaseRenderer {
-  constructor(eventBus, bpmnRenderer, paletteEntries) {
-    super(eventBus, HIGH_PRIORITY);
+    svgAppend(parentGfx, text);
 
-    this.bpmnRenderer = bpmnRenderer;
-    this.paletteEntries = paletteEntries; // custom ..
+    return text;
   }
 
-  canRender(element) {
-
-    // only render tasks and events (ignore labels)
-    return isAny(element, [ 'bpmn:Task', 'bpmn:Event' ]) && !element.labelTarget;
-  }
-
-  //  CustomRenderer.js 的 drawShape() 方法，这个是渲染的核心方法， 返回一个 shape，即一个 SVG
-  drawShape(parentNode, element) {
-    const paletteEntries = this.paletteEntries
-    // 通过 type 找到对应的配置
-    const shape = find(paletteEntries, (entry) => {
-      console.log(element,'element');
-      return is(element, entry.type)
-    })
-    // 如果传入自定义方法，则回调该方法
-    if (shape && shape.drawShape instanceof Function) {
-      return shape.drawShape(parentNode, element, this.bpmnRenderer, shape)
+  this.drawCustomElements = function (parentNode, element) {
+    console.log(element);
+    const type = element.type; // 获取到类型
+    if (type !== "label") {
+      if (customElements.includes(type)) {
+        // or customConfig[type]
+        const { url, attr } = customConfig[type];
+        const customIcon = svgCreate("image", {
+          ...attr,
+          href: url,
+        });
+        element["width"] = attr.width; // 这里我是取了巧, 直接修改了元素的宽高
+        element["height"] = attr.height;
+        svgAppend(parentNode, customIcon);
+        console.log(element.labels.length);
+        console.log(element.label);
+        // 判断是否有name属性来决定是否要渲染出label
+        // if (!hasLabelElements.includes(type) && element.businessObject.name) {
+        //     const text = svgCreate('text', {
+        //         x: attr.x,
+        //         y: attr.y + attr.height + 20,
+        //         "font-size": "14",
+        //         "fill": "#000"
+        //     })
+        //     text.innerHTML = element.businessObject.name
+        //     svgAppend(parentNode, text)
+        //     console.log(text)
+        // }
+        // renderLabel(parentNode, element.label)
+        return customIcon;
+      }
+      const shape = this.bpmnRenderer.drawShape(parentNode, element);
+      return shape;
+    } else {
+      // element
     }
-    // 否则调用默认渲染的方法
-    return this.bpmnRenderer.drawShape(parentNode, element)
-  }
-
-  getShapePath(shape) {
-    if (is(shape, 'bpmn:Task')) {
-      return getRoundRectPath(shape, TASK_BORDER_RADIUS);
-    }
-
-    return this.bpmnRenderer.getShapePath(shape);
-  }
+  };
 }
 
-CustomRenderer.$inject = [ 'eventBus', 'bpmnRenderer', 'config.paletteEntries' ]; // new Bpmn() 时传入的config配置对象
+inherits(CustomRenderer, BaseRenderer);
 
+CustomRenderer.$inject = ["eventBus", "styles", "textRenderer"];
 
-// helpers //////////
+CustomRenderer.prototype.canRender = function (element) {
+  // ignore labels
+  return true;
+  // return !element.labelTarget;
+};
 
-// // copied from https://github.com/bpmn-io/bpmn-js/blob/master/lib/draw/BpmnRenderer.js
-// function drawRect(parentNode, width, height, borderRadius, strokeColor) {
-//   const rect = svgCreate('rect');
+CustomRenderer.prototype.drawShape = function (p, element) {
+  console.log(element);
+  console.log(element.type);
+  if (customElements.includes(element.type)) {
+    return this.drawCustomElements(p, element);
+  }
+};
 
-//   svgAttr(rect, {
-//     width: width,
-//     height: height,
-//     rx: borderRadius,
-//     ry: borderRadius,
-//     stroke: strokeColor || '#000',
-//     strokeWidth: 2,
-//     fill: '#fff'
-//   });
-
-//   svgAppend(parentNode, rect);
-
-//   return rect;
-// }
-
-// // copied from https://github.com/bpmn-io/diagram-js/blob/master/lib/core/GraphicsFactory.js
-// function prependTo(newNode, parentNode, siblingNode) {
-//   parentNode.insertBefore(newNode, siblingNode || parentNode.firstChild);
-// }
+CustomRenderer.prototype.getShapePath = function (shape) {
+  console.log(shape);
+};
