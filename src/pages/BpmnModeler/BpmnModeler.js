@@ -1,7 +1,9 @@
 import React from "react";
 import "./BpmnModelerApp.css";
 
-import BpmnModeler from "bpmn-js/lib/Modeler";
+// import BpmnModeler from "bpmn-js/lib/Modeler";
+import BpmnModeler from "../custom/modeler";
+
 // import testDiagram from '../common/xml/diagram.xml';
 import getDefaultXml from "../common/xml/getDefaultXml";
 
@@ -11,6 +13,7 @@ import "bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
 
 import "bpmn-js-properties-panel/dist/assets/bpmn-js-properties-panel.css"; // 右边工具栏样式
+
 // 这里引入的是右侧属性栏这个框 （属性面板）
 import propertiesPanelModule from "bpmn-js-properties-panel";
 // 而这个引入的是右侧属性栏里的内容 （属性面板内容提供者）
@@ -47,22 +50,22 @@ class BpmnModelerApp extends React.Component {
 
     initBpmnModeler = async () => {
         // // 去除默认工具栏
-        const modules = BpmnModeler.prototype._modules;
-        const index = modules.findIndex(it => it.paletteProvider);
-        modules.splice(index, 1);
+        // const modules = BpmnModeler.prototype._modules;
+        // const index = modules.findIndex(it => it.paletteProvider);
+        // modules.splice(index, 1);
 
         const bpmnModeler = new BpmnModeler({
             container: "#canvas",
 
-            paletteEntries, // 引入工具栏配置 (自定义)
+            // paletteEntries, // 引入工具栏配置 (自定义)
 
             propertiesPanel: {
                 parent: "#properties-panel",
             },
 
             additionalModules: [
-                customPalette,
-                customRenderer,
+                // customPalette,
+                // customRenderer,
                 propertiesPanelModule,
                 propertiesProviderModule,
             ],

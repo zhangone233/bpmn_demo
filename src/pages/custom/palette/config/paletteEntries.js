@@ -39,7 +39,7 @@ export default {
     // 'bpmn-icon-task',
     'bpmn-icon-task-3', // 🙋‍♂️ 使用图片后，记得修改成自己的类名
     'Create Task',
-    require('../../../assets/imgs/douyin_icon.png'), // 使用图片
+    require('../../../assets/imgs/client.png'), // 使用图片
     drawShape, //增加一个 drawShape 功能，也就是将创建 SVG 的工作交给 paletteEntries.js 实现
   ),
   'create.task4': createAction(
@@ -48,7 +48,7 @@ export default {
     // 'bpmn-icon-task',
     'bpmn-icon-task-4', // 🙋‍♂️ 使用图片后，记得修改成自己的类名
     'Create Task',
-    require('../../../assets/imgs/douyin_icon.png'), // 使用图片
+    require('../../../assets/imgs/FE.png'), // 使用图片
     drawShape, //增加一个 drawShape 功能，也就是将创建 SVG 的工作交给 paletteEntries.js 实现
   ),
 }
@@ -66,6 +66,7 @@ function createAction(type, group, className, title, imageUrl = '', drawShape) {
   }
 
   const config = {
+    id: 'task_',
     type, // 📌 渲染的时候需要判断
     group: group,
     className: className,
@@ -95,6 +96,8 @@ function drawShape(parentNode, element, bpmnRenderer, shapeConfig) {
   const shape = bpmnRenderer.drawShape(parentNode, element)
 
   if (is(element, 'bpmn:Task')) {
+    console.log(shapeConfig,'shapeConfig');
+    
     const height = 80
     const width = 100
     // 真实元素的宽高
