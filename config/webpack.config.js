@@ -558,6 +558,14 @@ module.exports = function (webpackEnv) {
             // Make sure to add the new loader(s) before the "file" loader.
           ],
         },
+        {
+          test: /\.bpmnlintrc$/,
+          use: [
+            {
+              loader: 'bpmnlint-loader',
+            }
+          ]
+        },
       ].filter(Boolean),
     },
     plugins: [
