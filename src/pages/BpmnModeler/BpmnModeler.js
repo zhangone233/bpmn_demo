@@ -26,6 +26,9 @@ import propertiesPanelModule from "bpmn-js-properties-panel";
 // 而这个引入的是右侧属性栏里的内容 （属性面板内容提供者）
 import propertiesProviderModule from "bpmn-js-properties-panel/lib/provider/camunda";
 
+const path = require('path')
+console.log(path,'path');
+
 class BpmnModelerApp extends React.Component {
   constructor() {
     super();
