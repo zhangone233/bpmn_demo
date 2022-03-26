@@ -53,3 +53,43 @@ export function getBusinessObject(element) {
 export function getDi(element) {
   return element && element.di;
 }
+
+
+/**
+ * 左边工具栏的配置
+ * personTask ：工具栏属性名与自定义属性面板的form组件保持一致
+ */
+ export const customTask = {
+  "personTask" : {
+    label: '用户事件',
+    imgUrl: require('./../../../assets/imgs/RD.png'),
+    // other property
+  },
+  "timerTask": {
+    label: '时间器事件',
+    imgUrl: require('./../../../assets/imgs/task.png'),
+    // other property
+  }
+}
+
+
+/** 
+ * old
+ */
+// export const customTask = {
+//   "personTask" : [
+//     {
+//       label: '用户事件',
+//       imgUrl: require('./components/img/task.png'),
+//       // other property
+//     },
+//     {
+//       type: 'selectBox',      // 这些自定义bpmn自带属性面板的字段配置就不用了。 需要填写的字段都在form组件里写死的。 根据选中的工具栏图形展示到对应的表单即可
+//       id: 'xxx',
+//       selectOption: [
+//         // xxx
+//       ]
+//     }
+//   ],
+// }
+

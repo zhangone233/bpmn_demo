@@ -57,7 +57,7 @@ class BpmnModelerApp extends React.Component {
         const bpmnModeler = new BpmnModeler({
             container: "#canvas",
 
-            paletteEntries, // 引入工具栏配置 (自定义)
+            // paletteEntries, // 引入工具栏配置 (自定义)
 
             // propertiesPanel: {
             //     parent: "#properties-panel",
