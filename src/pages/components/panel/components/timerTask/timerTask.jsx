@@ -9,6 +9,7 @@ const initialFormValue = {
   id: "",
   name: "",
   age: "",
+  address: "",
 };
 
 class FormApp extends React.PureComponent {
@@ -102,6 +103,7 @@ class FormApp extends React.PureComponent {
         errorInfo => {
           // 校验不通过
           console.log(errorInfo, "失败");
+
           changeIsCurrentPanelComponentChecked(false);
         }
       );
@@ -115,7 +117,7 @@ class FormApp extends React.PureComponent {
       this.updateBaseInfo(key, value);
     });
 
-    Promise.resolve().then(this.handleCheckForm)
+    Promise.resolve().then(this.handleCheckForm);
   };
 
   render() {
@@ -133,12 +135,12 @@ class FormApp extends React.PureComponent {
           key={elementBaseInfo.id}
           name={elementBaseInfo.id}
           ref={this.FormInstanceRef}
+          name={elementBaseInfo.id}
+          initialValues={elementBaseInfo}
+          onValuesChange={this.onValuesChange}
           labelCol={{ span: 8 }}
           wrapperCol={{ span: 16 }}
-          initialValues={elementBaseInfo}
-          onFinish={this.onSubmit}
           autoComplete='off'
-          onValuesChange={this.onValuesChange}
         >
           <Form.Item
             label='name'
@@ -159,6 +161,14 @@ class FormApp extends React.PureComponent {
               <Option value='3'>3</Option>
               <Option value='18'>18</Option>
             </Select>
+          </Form.Item>
+
+          <Form.Item
+            name='address'
+            label='地址'
+            rules={[{ required: true, message: "Please input your password!" }]}
+          >
+            <Input />
           </Form.Item>
 
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>

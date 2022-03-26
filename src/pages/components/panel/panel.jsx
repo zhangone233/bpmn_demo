@@ -1,7 +1,6 @@
 import React, { createRef } from "react";
 import "./panel.css";
 
-import Form1 from "./components/personTask/personTask";
 import highlight from "highlight.js";
 import { Modal } from "antd";
 
@@ -14,11 +13,12 @@ const CustomPropertiesPanelComponents = {};
 const CustomPropertiesPanelComponentsFiles = require.context(
   "./components",
   true,
-  /\.js$/
+  /\.jsx$/
 );
+
 //  keys()返回components文件夹下所有以.js结尾的文件的文件名,返回文件名组成的数组  fileName为./timerTask/index.js
 CustomPropertiesPanelComponentsFiles.keys().forEach(fileUrl => {
-  const fileName = path.basename(fileUrl, ".js"); // 'xxx.js'
+  const fileName = path.basename(fileUrl, ".jsx"); // 'xxx.js'
   CustomPropertiesPanelComponents[fileName] =
     CustomPropertiesPanelComponentsFiles(fileUrl).default ||
     CustomPropertiesPanelComponentsFiles(fileUrl);
@@ -36,8 +36,13 @@ class Panel extends React.PureComponent {
       CurrentPanelComponent: () => null,
     };
   }
-  timer = null;
+  initModelTimer = null;
   previewDomRef = createRef(null);
+  isCurrentPanelComponentChecked = false;
+
+  changeIsCurrentPanelComponentChecked = isChecked => {
+    this.isCurrentPanelComponentChecked = isChecked;
+  };
 
   componentDidMount() {
     this.initModels();
@@ -49,10 +54,10 @@ class Panel extends React.PureComponent {
     // 初始化 modeler 以及其他 moddle
     if (!bpmnModeler) {
       // 避免加载时 流程图 并未加载完成
-      this.timer = setTimeout(() => this.initModels(), 10);
+      this.initModelTimer = setTimeout(() => this.initModels(), 10);
       return;
     }
-    if (this.timer) clearTimeout(this.timer);
+    if (this.initModelTimer) clearTimeout(this.initModelTimer);
 
     const bpmnInstancesContext = {
       ...initialBpmnInstancesContext,
@@ -90,15 +95,35 @@ class Panel extends React.PureComponent {
 
     // 监听选择事件，修改当前激活的元素以及表单
     bpmnModeler.on("selection.changed", ({ newSelection }) => {
-      console.log(newSelection[0], "newSelection");
+      const {
+        selection, // 选中图形的方法
+        elementInfo: { bpmnElement }, // 当前选中的图形  shape
+      } = this.state.bpmnInstancesContext;
 
-      const selectionBpmnElement = newSelection[0];
-      const panelName = selectionBpmnElement?.id?.split('_')[0] || '';
+      let newSelectionElement = newSelection[0]; // 收到点击切换的元素
+      console.log(newSelectionElement, "newSelection");
+
+      if (newSelectionElement?.id !== "Process_1" && bpmnElement?.id !== "Process_1") {
+        if (
+          bpmnElement?.id !== newSelectionElement?.id &&
+          !this.isCurrentPanelComponentChecked
+        ) {
+          selection.select(bpmnElement);
+          newSelectionElement = bpmnElement;
+          console.log("当前组件form未校验通过");
+        }
+      } else {
+        this.isCurrentPanelComponentChecked = true;
+      }
+
+      console.log(newSelectionElement, "newSelectionElement");
+
+      const panelName = newSelectionElement?.id?.split("_")[0] || "";
       this.setState({
         CurrentPanelComponent: CustomPropertiesPanelComponents[panelName] || (() => null),
-      })
+      });
 
-      this.initFormOnChanged(selectionBpmnElement || null);
+      this.initFormOnChanged(newSelectionElement || null);
     });
 
     bpmnModeler.on("element.changed", ({ element }) => {
@@ -171,12 +196,18 @@ class Panel extends React.PureComponent {
 
       xml,
       isPreviewModalVisible,
+      CurrentPanelComponent,
     } = this.state;
 
     return (
       <div className='custom-panel-container'>
         <BpmnInstancesContext.Provider value={bpmnInstancesContext}>
-          <CurrentPanelComponent elementBusinessObject={elementBusinessObject} />
+          <CurrentPanelComponent
+            elementBusinessObject={elementBusinessObject}
+            changeIsCurrentPanelComponentChecked={
+              this.changeIsCurrentPanelComponentChecked
+            }
+          />
         </BpmnInstancesContext.Provider>
 
         <div className='tool-bar'>
