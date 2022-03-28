@@ -1,4 +1,4 @@
-import { customTask } from "../utils/util";
+import { customTask, BPMN_PUBLIC_STATE } from "../utils/util";
 
 const entriesConfig = {};
 
@@ -17,8 +17,10 @@ for (let id in customTask) {
 
 function createAction(type, group, className, title, imageUrl, id) {
   function createListener(event, autoActivate, elementFactory, create) {
-    const shape = elementFactory.createShape({ type, id: `${id}_${Date.now()}` });
-    create.start(event, shape);
+    if (BPMN_PUBLIC_STATE.IS_CREATE) {
+      const shape = elementFactory.createShape({ type, id: `${id}_${Date.now()}` });
+      create.start(event, shape);
+    }
   }
 
   return {

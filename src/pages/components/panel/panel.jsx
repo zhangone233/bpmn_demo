@@ -8,6 +8,8 @@ import BpmnInstancesContext, {
   initialBpmnInstancesContext,
 } from "./store/bpmnInstancesContext";
 
+import { BPMN_PUBLIC_STATE } from "../../custom/modeler/utils/util";
+
 const path = require("path");
 const CustomPropertiesPanelComponents = {};
 const CustomPropertiesPanelComponentsFiles = require.context(
@@ -38,10 +40,11 @@ class Panel extends React.PureComponent {
   }
   initModelTimer = null;
   previewDomRef = createRef(null);
-  isCurrentPanelComponentChecked = false;
+  isCurrentPanelComponentChecked = true;
 
   changeIsCurrentPanelComponentChecked = isChecked => {
     this.isCurrentPanelComponentChecked = isChecked;
+    BPMN_PUBLIC_STATE.IS_CREATE = isChecked;
   };
 
   componentDidMount() {
@@ -100,8 +103,7 @@ class Panel extends React.PureComponent {
         elementInfo: { bpmnElement }, // 当前选中的图形  shape
       } = this.state.bpmnInstancesContext;
 
-      let newSelectionElement = newSelection[0]; // 收到点击切换的元素
-      console.log(newSelectionElement, "newSelection");
+      let newSelectionElement = newSelection[0]; // 点击切换的元素
 
       if (newSelectionElement?.id !== "Process_1" && bpmnElement?.id !== "Process_1") {
         if (
@@ -115,8 +117,6 @@ class Panel extends React.PureComponent {
       } else {
         this.isCurrentPanelComponentChecked = true;
       }
-
-      console.log(newSelectionElement, "newSelectionElement");
 
       const panelName = newSelectionElement?.id?.split("_")[0] || "";
       this.setState({

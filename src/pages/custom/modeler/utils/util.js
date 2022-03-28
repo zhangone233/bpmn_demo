@@ -14,3 +14,7 @@
     // other property
   }
 }
+
+export const BPMN_PUBLIC_STATE = {
+  IS_CREATE: true, // 是否能创建图形
+}
