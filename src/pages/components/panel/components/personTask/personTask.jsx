@@ -115,6 +115,7 @@ class FormApp extends React.PureComponent {
       this.updateBaseInfo(key, value);
     });
 
+    // 直接调用的时候 this.handleCheckForm() 填完表单还是不能关闭面板。表单值改变的时候setstate还没执行完就进行了校验，校验的是上一次的值，尝试采用Promise的方式可以解决这个问题
     Promise.resolve().then(this.handleCheckForm)
   };
 
@@ -161,11 +162,11 @@ class FormApp extends React.PureComponent {
             </Select>
           </Form.Item>
 
-          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+          {/* <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button type='primary' onClick={this.handleCheckForm}>
               Submit
             </Button>
-          </Form.Item>
+          </Form.Item> */}
         </Form>
       </Card>
     );

@@ -100,17 +100,20 @@ class Panel extends React.PureComponent {
     bpmnModeler.on("selection.changed", ({ newSelection }) => {
       const {
         selection, // 选中图形的方法
-        elementInfo: { bpmnElement }, // 当前选中的图形  shape
+        elementInfo: { bpmnElement }, // selection.changed事件执行完之前代表的是上次选中的元素  shape
       } = this.state.bpmnInstancesContext;
 
+
+      //  增加校验控制   bpmnElement代表在selection.changed事件执行完之前上次选中的元素，执行完之后就将本次的元素newSelection更新到了bpmnElement中，此时二者保持一致
       let newSelectionElement = newSelection[0]; // 点击切换的元素
 
-      if (newSelectionElement?.id !== "Process_1" && bpmnElement?.id !== "Process_1") {
+//  上一次和本次选中的是同一个元素的时候，取消选中返回的是undefined，也会走下面的逻辑，检验不通过，右边面板不能收起
+    if (newSelectionElement?.id !== "Process_1" && bpmnElement?.id !== "Process_1") { //  初始化选中根元素，画布Process_1
         if (
           bpmnElement?.id !== newSelectionElement?.id &&
           !this.isCurrentPanelComponentChecked
         ) {
-          selection.select(bpmnElement);
+          selection.select(bpmnElement);  //  上一次和本次点击的不是同一个元素并且校验不通过，就把档次选中的元素改成上一个元素
           newSelectionElement = bpmnElement;
           console.log("当前组件form未校验通过");
         }
@@ -152,6 +155,7 @@ class Panel extends React.PureComponent {
     const { elementRegistry } = bpmnInstancesContext;
 
     let activatedElement = element;
+    debugger
 
     if (!activatedElement) {
       // 寻找初始化选中元素 bpmn:Process
