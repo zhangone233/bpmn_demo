@@ -67,6 +67,7 @@ class Panel extends React.PureComponent {
         // 初始第一个选中元素 bpmn:Process
         this.initFormOnChanged(null);
 
+        //  导入xml之后会执行的函数
         bpmnModeler.on("import.done", e => {
             // console.log('import.done',e)
             this.initFormOnChanged(null);

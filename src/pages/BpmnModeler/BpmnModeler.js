@@ -111,7 +111,7 @@ class BpmnModelerApp extends React.Component {
                 <div id='properties-panel' className='panel' />
                 <div id='canvas' />
 
-                {/* <Panel bpmnModeler={bpmnModeler} /> */}
+                <Panel bpmnModeler={bpmnModeler} />
             </div>
         );
     }
