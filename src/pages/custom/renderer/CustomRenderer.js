@@ -41,7 +41,7 @@ export default class CustomRenderer extends BaseRenderer {
     const paletteEntries = this.paletteEntries
     // 通过 type 找到对应的配置
     const shape = find(paletteEntries, (entry) => {
-      console.log(element,'element');
+      // console.log(element,'element');
       return is(element, entry.type)
     })
     // 如果传入自定义方法，则回调该方法

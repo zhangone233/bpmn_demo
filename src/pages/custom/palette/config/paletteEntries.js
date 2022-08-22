@@ -61,7 +61,7 @@ function createAction(type, group, className, title, imageUrl = '', drawShape) {
   function createListener(event, autoActivate, elementFactory, create) {
     var shape = elementFactory.createShape({ type })
 
-    console.log(shape,'shape');
+    // console.log(shape,'shape');
     create.start(event, shape)
   }
 
@@ -96,7 +96,7 @@ function drawShape(parentNode, element, bpmnRenderer, shapeConfig) {
   const shape = bpmnRenderer.drawShape(parentNode, element)
 
   if (is(element, 'bpmn:Task')) {
-    console.log(shapeConfig,'shapeConfig');
+    // console.log(shapeConfig,'shapeConfig');
     
     const height = 80
     const width = 100

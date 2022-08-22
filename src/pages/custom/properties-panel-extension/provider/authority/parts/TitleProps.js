@@ -15,8 +15,8 @@ export default function(group, element, translate) {
     const { businessObject } = element;
     const $attrs = businessObject.$attrs;
 
-    console.log(businessObject,'businessObject');
-    console.log(businessObject.$attrs,'attrs');
+    // console.log(businessObject,'businessObject');
+    // console.log(businessObject.$attrs,'attrs');
     
     entryConfig.task.forEach(item => {
       const hiddenConfig = item.hiddenConfig;

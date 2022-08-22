@@ -2,6 +2,7 @@ import Modeler from 'bpmn-js/lib/Modeler'
 // import inherits from 'inherits'
 // import CustomModule from './custom'
 import CustomModule from './palette'
+import BpmnAutoPlace from '../auto-place';
 
 export default function CustomModeler(options) {
     Modeler.call(this, options)
@@ -17,6 +18,7 @@ CustomModeler.prototype.constructor = CustomModeler; // 修复子类CustomModele
 
 CustomModeler.prototype._modules = [].concat(
   CustomModeler.prototype._modules, [
-      CustomModule
+      CustomModule,
+      BpmnAutoPlace
   ]
 )

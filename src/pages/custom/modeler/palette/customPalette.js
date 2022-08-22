@@ -20,7 +20,7 @@ PaletteProvider.prototype.getPaletteEntries = function (element) {
       const shape = elementFactory.createShape({
         type: "bpmn:Task",
       });
-      console.log(shape); // 只在拖动或者点击时触发
+      // console.log(shape); // 只在拖动或者点击时触发
       create.start(event, shape);
     };
   }
