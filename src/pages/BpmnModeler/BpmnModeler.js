@@ -99,6 +99,10 @@ class BpmnModelerApp extends React.Component {
 
     bpmnModelerAddEventListener = bpmnModeler => {
         const eventBus = bpmnModeler.get("eventBus");
+        
+        // eventBus.on('shape.move',100000, e => {
+        //     console.log(e,'shape.moveshape.moveshape.move');
+        // });
 
         // eventBus.on("selection.changed", e => {
         //   console.log(e, 'selection');

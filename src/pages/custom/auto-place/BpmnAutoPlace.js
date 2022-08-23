@@ -22,9 +22,15 @@ export default function AutoPlace(eventBus, modeling, elementRegistry) {
     // window.addEventListener('keydown', (e) => {
     //   console.log(e.key, modeling, 'e');
     //   if(e.key === 'ArrowUp'){
+    //     // modeling.moveShape(shape, {
+    //     //   x: shape.x + 10,
+    //     // }, source)
+
+    //     console.log(shape,'innnn shape');
     //     modeling.moveShape(shape, {
-    //       x: shape.x + 10,
-    //     }, source)
+    //       x: 10,
+    //       y: 10,
+    //     })
     //   }
 
     //   if(e.key === 'ArrowDown'){

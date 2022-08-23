@@ -60,7 +60,7 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   }
 
   function appendTaskStart(event) {
-    console.log(event);
+    console.log(event,'eventeventeventevent');
     const shape = elementFactory.createShape({ type: "bpmn:Task" });
     create.start(event, shape, element);
   }
