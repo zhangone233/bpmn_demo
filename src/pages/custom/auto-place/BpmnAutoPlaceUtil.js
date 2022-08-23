@@ -57,6 +57,9 @@ export function customGetCoordinate (lastPosition, elementRegistry, source, elem
   const rightX = offsetX + element.width;
   const bottomY = offsetY + element.height;
 
+  const margin = 30; // 固定的图形上下边距长度 （插件默认也是30）
+  let moveY = 0; // 记录Y轴下次递归应该增加的距离
+
   // 用来判断
   const isExistPoint = ({x, y}) => {
    return (x >= offsetX && x <= rightX) && (y >= offsetY && y <= bottomY)
@@ -87,7 +90,14 @@ export function customGetCoordinate (lastPosition, elementRegistry, source, elem
       }
 
       // 四个角坐标有一个处于新建图形大小范围之内的，都往下调整位置
-      return [leftUp,leftDown,rightUp,rightDown].some(point => isExistPoint(point))
+      const isBreak = [leftUp,leftDown,rightUp,rightDown].some(point => isExistPoint(point))
+
+      if(isBreak){
+        // 正在占位图形的下Y轴坐标 + 间距
+        moveY = shapeY + height + margin;
+      }
+
+      return isBreak;
       
       // return (shapeX >= offsetX && shapeX <= rightX) && (shapeY >= offsetY && shapeY <= bottomY)
     }
@@ -97,7 +107,8 @@ export function customGetCoordinate (lastPosition, elementRegistry, source, elem
 
   if(isExistCoverage) {
     // lastPosition.x = lastPosition.x + element.width / 2; // 如果需要平移，可以修改x轴位置
-    lastPosition.y = lastPosition.y + element.height / 2; // 往下移动半个身位
+    // lastPosition.y = lastPosition.y + element.height / 2; // 往下移动半个身位
+    lastPosition.y = moveY + element.height / 2; // 得到中心点的坐标
 
     // 递归继续判断位置，直至找到一块空地
     return customGetCoordinate(lastPosition, elementRegistry, source, element)
