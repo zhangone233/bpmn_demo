@@ -13,7 +13,7 @@ export default function AutoPlace(eventBus, modeling, elementRegistry) {
     var shape = context.shape,
         source = context.source;
 
-    const position = getNewShapePosition(source, shape, elementRegistry);
+    const position = getNewShapePosition(source, shape, elementRegistry, modeling);
 
     console.log(shape,'shape');
     console.log(source,'source');

@@ -23,7 +23,7 @@ import {
  *
  * @return {Point}
  */
-export function getNewShapePosition(source, element, elementRegistry) {
+export function getNewShapePosition(source, element, elementRegistry, modeling) {
   console.log(element,'element');
 
   if (is(element, 'bpmn:TextAnnotation')) {
@@ -38,80 +38,130 @@ export function getNewShapePosition(source, element, elementRegistry) {
   if (is(element, 'bpmn:FlowNode')) {
     console.log('2222');
 
-    return getFlowNodePosition(source, element, elementRegistry);
+    return getFlowNodePosition(source, element, elementRegistry, modeling);
   }
 }
 
 // 自定义的方法
-export function customGetCoordinate (lastPosition, elementRegistry, source, element) {
-  const allShape = elementRegistry.getAll()[0].children || []; // 获取流程所有图形shape对象
-  // console.log(allShape, 'shape');
+export function customGetCoordinate (lastPosition, elementRegistry, source, element, modeling) {
+  let isExistCoverageFlag = false;
 
-  // 中心坐标
-  const { x, y } = lastPosition;
+  const recursion = (lastPosition) => {
 
-  // 先拿到实际运算用的位置 （左上角坐标）
-  const offsetX = x - element.width / 2;
-  const offsetY = y - element.height / 2;
-  
-  const rightX = offsetX + element.width;
-  const bottomY = offsetY + element.height;
+    const allShape = elementRegistry.getAll()[0].children || []; // 获取流程所有图形shape对象
+    // console.log(allShape, 'shape');
 
-  // 用来判断
-  const isExistPoint = ({x, y}) => {
-   return (x >= offsetX && x <= rightX) && (y >= offsetY && y <= bottomY)
-  }
+    // 中心坐标
+    const { x, y } = lastPosition;
 
-  // 递归标识
-  const isExistCoverage = allShape.some(shape => {
-   
-    // 只判断task元素
-    if(is(shape, "bpmn:Task")) {
-      const { x: shapeX, y: shapeY, width, height } = shape;
+    // 先拿到实际运算用的位置 （左上角坐标）
+    const offsetX = x - element.width / 2;
+    const offsetY = y - element.height / 2;
+    
+    const rightX = offsetX + element.width;
+    const bottomY = offsetY + element.height;
 
-      const leftUp = {
-        x: shapeX,
-        y: shapeY,
-      }
-      const leftDown = {
-        x: shapeX,
-        y: shapeY + height,
-      }
-      const rightUp = {
-        x: shapeX + width,
-        y: shapeY,
-      }
-      const rightDown = {
-        x: shapeX + width,
-        y: shapeY + height,
-      }
+    const margin = 30;
+    let addedY = 0;
 
-      // 四个角坐标有一个处于新建图形大小范围之内的，都往下调整位置
-      return [leftUp,leftDown,rightUp,rightDown].some(point => isExistPoint(point))
-      
-      // return (shapeX >= offsetX && shapeX <= rightX) && (shapeY >= offsetY && shapeY <= bottomY)
+    // 用来判断
+    const isExistPoint = ({x, y}) => {
+    return (x >= offsetX && x <= rightX) && (y >= offsetY && y <= bottomY)
     }
-  });
 
-  console.log(isExistCoverage, 'isExistCoverage');
+    // 递归标识
+    const isExistCoverage = allShape.some(shape => {
+    
+      // 只判断task元素
+      if(is(shape, "bpmn:Task")) {
+        const { x: shapeX, y: shapeY, width, height } = shape;
 
-  if(isExistCoverage) {
-    // lastPosition.x = lastPosition.x + element.width / 2; // 如果需要平移，可以修改x轴位置
-    lastPosition.y = lastPosition.y + element.height / 2; // 往下移动半个身位
+        const leftUp = {
+          x: shapeX,
+          y: shapeY,
+        }
+        const leftDown = {
+          x: shapeX,
+          y: shapeY + height,
+        }
+        const rightUp = {
+          x: shapeX + width,
+          y: shapeY,
+        }
+        const rightDown = {
+          x: shapeX + width,
+          y: shapeY + height,
+        }
 
-    // 递归继续判断位置，直至找到一块空地
-    return customGetCoordinate(lastPosition, elementRegistry, source, element)
+        // return (shapeX >= offsetX && shapeX <= rightX) && (shapeY >= offsetY && shapeY <= bottomY)
+        // 四个角坐标有一个处于新建图形大小范围之内的，都往下调整位置
+        // return [leftUp,leftDown,rightUp,rightDown].some(point => isExistPoint(point))
+
+        const isBreak = [leftUp,leftDown,rightUp,rightDown].some(point => isExistPoint(point));
+
+        if(isBreak) {
+          addedY = shapeY + height + margin;
+        }
+
+        return isBreak;
+      }
+    });
+
+    console.log(isExistCoverage, 'isExistCoverage');
+
+    if(isExistCoverage) {
+      isExistCoverageFlag = true;
+
+      // lastPosition.x = lastPosition.x + element.width / 2; // 如果需要平移，可以修改x轴位置
+      // lastPosition.y = lastPosition.y + element.height / 2; // 往下移动半个身位
+      lastPosition.y = addedY + element.height / 2; // 往下移动半个身位
+
+      // 递归继续判断位置，直至找到一块空地
+      return recursion(lastPosition)
+    }
+
+    return lastPosition;
+  };
+
+  const position = recursion(lastPosition);
+
+  if(isExistCoverageFlag){
+
+   setTimeout(() => {
+    const connection = element.incoming[0];
+    console.log(connection,'element.incoming[0]');
+
+    if(!connection) return;
+
+     modeling.moveConnection(connection, {
+      x: -10,
+      y: 10,
+    });
+
+    const waypoints = connection.waypoints || [];
+
+    waypoints[0].x = waypoints[0].x + 10;
+
+    waypoints[2].y = waypoints[2].y - 20;
+
+    waypoints[3].x = waypoints[3].x + 10;
+    waypoints[3].y = waypoints[3].y - 20;
+
+     modeling.updateWaypoints(connection, waypoints);
+
+    
+   },10)
   }
 
   // 返回最终坐标 （这个是以图形中心）
-  return lastPosition;
+  return position;
 }
 
 /**
  * Always try to place element right of source;
  * compute actual distance from previous nodes in flow.
  */
-export function getFlowNodePosition(source, element, elementRegistry) {
+export function getFlowNodePosition(source, element, elementRegistry, modeling) {
 
   var sourceTrbl = asTRBL(source);
   var sourceMid = getMid(source);
@@ -149,7 +199,7 @@ export function getFlowNodePosition(source, element, elementRegistry) {
   const lastPosition = findFreePosition(source, element, position, generateGetNextPosition(nextPositionDirection));
 
   // 自定义获取
-  return customGetCoordinate(lastPosition, elementRegistry, source, element);
+  return customGetCoordinate(lastPosition, elementRegistry, source, element, modeling);
 }
 
 

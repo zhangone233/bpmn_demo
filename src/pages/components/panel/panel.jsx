@@ -23,6 +23,25 @@ class Panel extends React.PureComponent {
     timer = null;
     previewDomRef = createRef(null);
 
+    currentSelectionShape = undefined;
+
+    changeConnectColor = (selectionShape) => {
+        const { modeling } = this.state.bpmnInstancesContext
+
+        this.currentSelectionShape?.incoming?.[0] && modeling?.setColor(this.currentSelectionShape.incoming[0], {
+            stroke: '#000'
+        })
+
+        if(selectionShape) {
+            selectionShape?.incoming?.[0] && modeling?.setColor(selectionShape.incoming[0], {
+                // fill: 'blue',
+                stroke: 'blue',
+                opacity: 0.4
+            });
+            this.currentSelectionShape = selectionShape;
+        }
+    }
+
     componentDidMount() {
         this.initModels();
     }
@@ -75,8 +94,9 @@ class Panel extends React.PureComponent {
         // 监听选择事件，修改当前激活的元素以及表单
         bpmnModeler.on("selection.changed", ({ newSelection }) => {
             console.log("切换了选中激活节点");
-
             console.log(newSelection[0], 'newSelection');
+
+            this.changeConnectColor(newSelection[0]);
 
             this.initFormOnChanged(newSelection[0] || null);
         });
