@@ -23,6 +23,8 @@ class Panel extends React.PureComponent {
     timer = null;
     previewDomRef = createRef(null);
 
+    flag = false;
+
     componentDidMount() {
         this.initModels();
     }
@@ -72,11 +74,26 @@ class Panel extends React.PureComponent {
             this.initFormOnChanged(null);
         });
 
+        bpmnModeler.on("shape.removed", e => {
+            console.log('shape.removed',e)
+            this.flag = true;
+        });
+
         // 监听选择事件，修改当前激活的元素以及表单
         bpmnModeler.on("selection.changed", ({ newSelection }) => {
-            console.log("切换了选中激活节点");
+            // console.log("切换了选中激活节点");
 
-            console.log(newSelection[0], 'newSelection');
+            setTimeout(() => {
+                if(this.flag) {
+                    this.flag = false;
+                    return;
+                }
+
+             console.log("校验表单");
+
+            },10)
+
+            // console.log(newSelection[0], 'newSelection');
 
             this.initFormOnChanged(newSelection[0] || null);
         });
