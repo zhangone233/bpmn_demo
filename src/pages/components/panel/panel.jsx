@@ -83,6 +83,8 @@ class Panel extends React.PureComponent {
         bpmnModeler.on("selection.changed", ({ newSelection }) => {
             // console.log("切换了选中激活节点");
 
+            console.log(newSelection?.[0], 'newSelection');
+
             setTimeout(() => {
                 if(this.flag) {
                     this.flag = false;

@@ -43,7 +43,7 @@ export function getNewShapePosition(source, element, elementRegistry, modeling) 
 
 /** 
  * 重新理一遍先
- * 先思路，后撸码。 之所谓码道 ---- ‘先礼后兵’。
+ * 先思路，后撸码。 码道 ---- ‘先礼后兵’。
  * 
  *  > 一些黑话单词：
  *    + source 指创建源shape元素。即新建图形元素的默认父级元素，被点击创建的触发源头
@@ -133,6 +133,30 @@ export function getNewShapePosition(source, element, elementRegistry, modeling) 
  */
 
 
+/**
+ * todo: 
+ * 1. 限制画布里的元素至多只能同时连接一根线
+ */
+
+// 放置方式枚举
+const placeModeEnum = {
+  append: 'append',
+  insert: 'insert',
+}
+
+// 区域方向枚举
+const directionAreaEnum = {
+  leftUp: 'leftUp',
+  leftDown: 'leftDown',
+  rightUp: 'rightUp',
+  rightDown: 'rightDown',
+  horizontalLower: 'horizontalLower',
+}
+
+/** 元素之间的Y轴间距 */
+const spaceY = 30;
+
+
 /** 判断一个平行点是否处于两个平行点之间 */
 const isExistHorizontalPoint = (x, targetLeftX, targetRightX) => (x >= targetLeftX && x <= targetRightX);
 /** 判断一个垂直点是否处于两个垂直点之间 */
@@ -151,7 +175,7 @@ const isExistPoint = (point, targetPoint) => {
 };
 
 /**
- * 获取新加task元素的四点坐标
+ * 获取新加task元素的四点坐标 (只获取单点)
  * @param {*} lastPosition 
  * @param {*} element 
  * @returns 
@@ -173,6 +197,51 @@ export const getTaskShapeFourCornersPoint = (lastPosition, element) => {
   };
 }
 
+/**
+ * 获取矩形元素四个角的坐标点信息
+ */
+export const getElementFourCornersPoints = (element) => {
+  const { x: shapeX, y: shapeY, width, height } = element;
+
+  // 获取遍历到的每个元素四角坐标点
+  const leftUp = {
+    x: shapeX,
+    y: shapeY,
+  };
+  const leftDown = {
+    x: shapeX,
+    y: shapeY + height,
+  };
+  const rightUp = {
+    x: shapeX + width,
+    y: shapeY,
+  };
+  const rightDown = {
+    x: shapeX + width,
+    y: shapeY + height,
+  };
+
+  return {
+    leftUp,
+    leftDown,
+    rightUp,
+    rightDown
+  }
+}
+
+
+/**
+ * 获取一个元素所连接的父元素
+ * @returns { element | undefined } 父元素 或 undefined
+ */
+export const getConnectedParentElement = (element) => {
+  if(!element) {
+    return;
+  }
+
+  const firstConnectElement = element?.incoming?.[0];
+  return firstConnectElement?.source;
+}
 
 /**
  * 指定一个位置，判断是否已经具有元素存在
@@ -190,46 +259,47 @@ export const isDesignatedPointAlreadyExists = (args) => {
 
   // lastPosition 位置范围内，是否已经具有其它元素的存在
   const coverageElement = targetColumnElements.find(shapeElement => {
-    const { x: shapeX, y: shapeY, width, height } = shapeElement;
-
     // 获取遍历到的每个元素四角坐标点
-      const leftUp = {
-        x: shapeX,
-        y: shapeY,
-      };
-      const leftDown = {
-        x: shapeX,
-        y: shapeY + height,
-      };
-      const rightUp = {
-        x: shapeX + width,
-        y: shapeY,
-      };
-      const rightDown = {
-        x: shapeX + width,
-        y: shapeY + height,
-      };
+    const { leftUp, leftDown, rightUp, rightDown }  = getElementFourCornersPoints(shapeElement);
 
-      return [leftUp, leftDown, rightUp, rightDown].some(point => isExistPoint(point, targetPoint))
+    return [leftUp, leftDown, rightUp, rightDown].some(point => isExistPoint(point, targetPoint))
   });
 
   const isExistPlaceholder = Boolean(coverageElement);
-  console.log(isExistPlaceholder, 'isExistPlaceholder');
 
   return {
     isExistPlaceholder, // 是否已被占位
-    placeholderElement, // 占位的当前元素
+    placeholderElement: coverageElement, // 占位的当前元素
   };
 }
 
 /**
  * 判断一组元素是否为兄弟关系
- * @returns: boolean
+ * 以首个元素的父元素为参照
+ * @param { shapeElement[] } elements
+ * @returns { boolean }
  */
-export const isWhetherTheyAreBrothers = ({
-  elements,
-}) => {
+export const isWhetherTheyAreBrothers = (elements) => {
+  if (!(elements && elements.length)) {
+    return false;
+  }
 
+  const firstElement = elements[0];
+  const referenceParentElement = getConnectedParentElement(firstElement);
+
+  return elements.every(element => getConnectedParentElement(element) === referenceParentElement);
+}
+
+/**
+ * 获取一个父级元素所连接的所有子级元素
+ * @param {*} parentElement 
+ * @returns { element[] } childrenElements
+ */
+export const getParentElementChildren = (parentElement) => {
+  const outgoing = parentElement?.outgoing || [];
+  const childrenElements = outgoing.map(connectionElement => connectionElement.target).filter(Boolean);
+
+  return childrenElements;
 }
 
 /** 
@@ -281,19 +351,181 @@ export const getBetweenTwoPointsElements = ({targetLeftX, targetRightX}, allShap
 }
 
 /**
- * 插入放置新元素
+ * 根据一个已有shape元素，得出它下面应放置新元素位置的坐标
  */
-export const insertPlaceElement = () => {}
+export const getReferenceElementUnderPosition = (referenceElement, latestPosition) => {
+  const { y, height } = referenceElement;
+  const nextPointY = y + height + spaceY;
+  
+  return {
+    ...latestPosition,
+    y: nextPointY,
+  }
+};
 
 /**
- * 补位放置新元素
+ * 元素是否在一个区域的范围之内 （在一个角也算）
+ * @param element 判断的元素
+ * @param pointsArea 区域坐标点
+ * @param { directionAreaEnum } direction 方向
  */
-export const appendPlaceElement = () => {
+export const isElementBeAreaWithin = (element, pointsArea, direction) => {
+  // 获取遍历到的每个元素四角坐标点
+  const { leftUp, leftDown, rightUp, rightDown }  = getElementFourCornersPoints(element);
+  const { x, y } = pointsArea;
 
+  switch (direction) {
+    case directionAreaEnum.leftDown: 
+      return [leftUp, leftDown, rightUp, rightDown].some(point => (point.x <= x && point.y >= y));
+    
+    case directionAreaEnum.rightDown:
+      return [leftUp, leftDown, rightUp, rightDown].some(point => (point.x >= x && point.y >= y));
+
+    case directionAreaEnum.leftUp: 
+      return [leftUp, leftDown, rightUp, rightDown].some(point => (point.x <= x && point.y <= y));
+
+    case directionAreaEnum.rightUp: 
+      return [leftUp, leftDown, rightUp, rightDown].some(point => (point.x >= x && point.y <= y));
+
+    case directionAreaEnum.horizontalLower:
+      return [leftUp, leftDown, rightUp, rightDown].some(point => point.y >= y);
+
+    default:
+      return false;
+  }
+};
+
+/**
+ * 根据元素的右上点坐标，获取左下区域所有元素集合
+ */
+export const getRightUpperPointToLeftLowerAreaElements = (source, allShapeElements) => {
+  const { x, y, width } = source;
+
+  // 右上点坐标
+  const points = {
+    x: x + width,
+    y: y,
+  };
+
+  const leftLowerElements = allShapeElements.filter(shapeElement => isElementBeAreaWithin(shapeElement, points, directionAreaEnum.leftDown));
+
+  return leftLowerElements;
+}
+
+/**
+ * 根据元素的左上点坐标，获取右下区域所有元素集合
+ */
+export const getLeftUpperPointToRightLowerAreaElements = (source, allShapeElements) => {
+  const { x, y } = source;
+
+  // 左上点坐标
+  const points = { x, y };
+
+  const rightLowerElements = allShapeElements.filter(shapeElement => isElementBeAreaWithin(shapeElement, points, directionAreaEnum.rightDown));
+
+  return rightLowerElements;
+}
+
+/**
+ * 根据元素的上边Y坐标，获取平行线下面的所有元素。
+ */
+export const getHorizontalLowerAreaElements = (source, allShapeElements) => {
+  const { x, y } = source;
+
+  const horizontalLowerElements = allShapeElements.filter(shapeElement => isElementBeAreaWithin(shapeElement, { x, y }, directionAreaEnum.horizontalLower));
+  
+  return horizontalLowerElements;
+}
+
+/**
+ * 插入放置移动元素
+ */
+export const insertPlaceMoveElement = (args, latestPosition, insertPlaceholderElement) => {
+  const {
+    source,
+    element,
+    modeling,
+    lastPosition,
+    elementRegistry,
+    allShapeElements,
+    targetColumnElements
+  } = args;
+
+  const { y: rawY } = lastPosition;
+  const { y: newY} = latestPosition;
+  const moveDistanceY = newY - rawY; // Y轴移动的距离
+
+  /**
+   * 1. 如果source没有子元素，那么下移source及本身左下区域的所有元素
+   * 2. 如果source已经有子元素，那么应该需要下移的是占位元素及本身的左下区域所有元素。 且移动距离应只有一个单位
+   * 3. 占位元素的右边....
+   */
+
+  // 获取 source 的所有子级元素。 如果已具有子元素，那么source及本身左下区域的所有元素就不需要下移了
+  const sourceChildren = getParentElementChildren(source);
+  const isExistChildren = Boolean(sourceChildren.length);
+
+  if (isExistChildren) {
+    const horizontalLowerElements = getHorizontalLowerAreaElements(insertPlaceholderElement, allShapeElements);
+    modeling.moveElements(horizontalLowerElements, {
+      x: 0,
+      y: insertPlaceholderElement.height + spaceY,
+    });
+
+    return;
+  };
+
+  const leftLowerElements = getRightUpperPointToLeftLowerAreaElements(source, allShapeElements);
+  const rightLowerElements = getLeftUpperPointToRightLowerAreaElements(insertPlaceholderElement, allShapeElements);
+
+  modeling.moveElements(leftLowerElements, {
+    x: 0,
+    y: moveDistanceY,
+  });
+
+  modeling.moveElements(rightLowerElements, {
+    x: 0,
+    y: moveDistanceY
+  });
+}
+
+/**
+ * 补位放置移动元素
+ */
+export const appendPlaceMoveElement = (args, latestPosition) => {
+  const {
+    source,
+    element,
+    modeling,
+    lastPosition,
+    elementRegistry,
+    allShapeElements,
+    targetColumnElements
+  } = args;
+
+  const { y: rawY } = lastPosition;
+  const { y: newY} = latestPosition;
+  const moveDistanceY = newY - rawY; // Y轴移动的距离
+
+  // 获取 source 的所有子级元素。 如果已具有子元素，那么就不需要下移元素了
+  const sourceChildren = getParentElementChildren(source);
+  const isExistChildren = Boolean(sourceChildren.length);
+  if (isExistChildren) {
+    return;
+  }
+
+  const leftLowerElements = getRightUpperPointToLeftLowerAreaElements(source, allShapeElements);
+  
+  // source及本身左下区域的所有元素往下移动
+  modeling.moveElements(leftLowerElements, {
+    x: 0,
+    y: moveDistanceY,
+  })
 }
 
 /**
  * 查找应该放置的最终位置信息
+ * 存在递归查找
  */
 export const findPlacePosition = (args, extension) => {
   const {
@@ -309,16 +541,61 @@ export const findPlacePosition = (args, extension) => {
   let { placeholderElement } = extension;
   const latestPosition = { ...lastPosition };
 
-  // 找到应该插入的位置或空位
-  const a = targetColumnElements.find(columnElements => {
-    
-  });
-  
-  return {
-    placeMode, // 放置方式
+  // 定义当前函数返回结果
+  const returnResult = {
     latestPosition, // 放置位置
+    placeMode: placeModeEnum.append, // 放置方式
+    insertPlaceholderElement: placeholderElement, // 在插入放置方案时，被插入位置的占位元素
   }
-}
+
+  // 当前占位元素在一列元素集合里的索引位置
+  const placeholderElementIndex = targetColumnElements.indexOf(placeholderElement);
+  // 上一个元素（可能是空）
+  const prevPlaceholderElement = targetColumnElements[placeholderElementIndex - 1];
+  // 下一个元素（可能是空）
+  const nextPlaceholderElement = targetColumnElements[placeholderElementIndex + 1];
+
+  /**
+   * 1. 先判断上面是否存在元素：
+   *    a. 如果存在就再判断与当前占位元素是否为兄弟关系？  如果不是就在中间插入。 而如果是就往下再进行判断。
+   *    b. 如果不存在就往下再进行判断。
+   * 2. 判断下面元素是否存在：
+   *    a. 如果存在就再判断与当前占位元素是否为兄弟关系？  如果不是就在中间插入。 而如果是就往下再进行判断。
+   *    b. 如果不存在，就进行末尾补位放置。
+   * 3. 如果上面步骤未能判断得出放置方式及放置位置，就往下递归再来一轮。
+   */
+
+  if (prevPlaceholderElement && !isWhetherTheyAreBrothers([prevPlaceholderElement, placeholderElement])) {
+    // 插入中间放置
+    returnResult.placeMode = placeModeEnum.insert;
+    returnResult.insertPlaceholderElement = placeholderElement;
+    returnResult.latestPosition = getReferenceElementUnderPosition(prevPlaceholderElement, latestPosition);
+
+    return returnResult;
+  }
+
+  if (!nextPlaceholderElement) {
+    // 下面不存在元素，就为补位放置。 返回应放置坐标
+    returnResult.latestPosition = getReferenceElementUnderPosition(placeholderElement, latestPosition);
+    
+    return returnResult;
+  }
+
+  if (!isWhetherTheyAreBrothers([placeholderElement, nextPlaceholderElement])) {
+    // 如果不是兄弟关系，就为插入放置
+    returnResult.placeMode = placeModeEnum.insert;
+    returnResult.insertPlaceholderElement = nextPlaceholderElement;
+    returnResult.latestPosition = getReferenceElementUnderPosition(placeholderElement, latestPosition);
+
+    return returnResult;
+  }
+
+   // 是兄弟关系就继续递归往下找。
+   return findPlacePosition(args, {
+    ...extension,
+    placeholderElement: nextPlaceholderElement,
+  })
+};
 
 /**
  * 1. 
@@ -340,25 +617,40 @@ export const locationInfoDetermination = (args) => {
     placeholderElement, // 占位的当前元素
   } = isDesignatedPointAlreadyExists(args);
 
-  // 没有已经存在的占位元素，就直接放置
-  if(!isExistPlaceholder) {
-    return {
-      next: false
-    }
+  const returnResult = {
+    autoPlace: true, // 是否以系统坐标放置
+    latestPosition: lastPosition, // 新的位置
   }
+
+  // 1. 没有已经存在的占位元素，就直接遵循系统位置放置
+  if(!isExistPlaceholder) {
+    return returnResult;
+  };
 
   const extension = {
     placeholderElement,
+  };
+
+  // 2. 获取新元素的放置方案及放置坐标
+  const { placeMode, latestPosition, insertPlaceholderElement } = findPlacePosition(args, extension);
+
+  switch (placeMode) {
+    case placeModeEnum.append:
+      appendPlaceMoveElement(args, latestPosition);
+      break;
+
+    case placeModeEnum.insert:
+      insertPlaceMoveElement(args, latestPosition, insertPlaceholderElement);
+      break;
+    
+    default:;
   }
 
-  // 判断上面是否有其它元素
+  returnResult.autoPlace = false;
+  returnResult.latestPosition = latestPosition;
 
-  // 判断下面是否有元素
-
-  const {} = findPlacePosition(args, extension);
-
+  return returnResult;
 }
-
 
 /**
  * 2.
@@ -389,18 +681,18 @@ export const customStart = (args) => {
 
   // 获取画布中所有图形shape对象集合
   const allShapeElements = elementRegistry.getAll()[0].children || []; 
-  const targetColumnElements = getBetweenTwoPointsElements(getTaskShapeFourCornersPoint(lastPosition), allShapeElements);
+  const targetColumnElements = getBetweenTwoPointsElements(getTaskShapeFourCornersPoint(lastPosition, element), allShapeElements);
 
-  const args = { ...args, allShapeElements, targetColumnElements };
+  const combinedArgs = { ...args, allShapeElements, targetColumnElements };
 
   // 1.
-  const { next, } = locationInfoDetermination(args);
-
-  if(!next) {
+  const { autoPlace, latestPosition } = locationInfoDetermination(combinedArgs);
+  
+  if(autoPlace) {
     return lastPosition;
   }
 
-  return lastPosition;
+  return latestPosition;
 }
 
 /**
