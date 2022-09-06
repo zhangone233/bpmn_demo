@@ -469,7 +469,7 @@ export const insertPlaceMoveElement = (args, latestPosition, insertPlaceholderEl
     const horizontalLowerElements = getHorizontalLowerAreaElements(insertPlaceholderElement, allShapeElements);
     modeling.moveElements(horizontalLowerElements, {
       x: 0,
-      y: insertPlaceholderElement.height + spaceY,
+      y: insertPlaceholderElement.height + spaceY, // 一个单位的距离
     });
 
     return;
@@ -478,15 +478,28 @@ export const insertPlaceMoveElement = (args, latestPosition, insertPlaceholderEl
   const leftLowerElements = getRightUpperPointToLeftLowerAreaElements(source, allShapeElements);
   const rightLowerElements = getLeftUpperPointToRightLowerAreaElements(insertPlaceholderElement, allShapeElements);
 
-  modeling.moveElements(leftLowerElements, {
+  modeling.moveElements(leftLowerElements.concat(rightLowerElements), {
     x: 0,
     y: moveDistanceY,
   });
 
-  modeling.moveElements(rightLowerElements, {
-    x: 0,
-    y: moveDistanceY
-  });
+
+  /**
+   * 一个特殊的额外判断
+   * 当上面判断source没有子元素需要下移时，但是 moveDistanceY 却是0 （表示source还是会在原地。）
+   * 这时候暂时先将被插入挤走的元素下移一定距离 (有可能是下面多个？)
+   */
+  if (!isExistChildren && moveDistanceY === 0) {
+    // 新元素下面位置的标准理想坐标
+    const targetY = newY + element.height + spaceY;
+    // 获取占位元素及它下面的兄弟元素们
+    const insertPlaceholderElementNextSiblings = targetColumnElements.slice(targetColumnElements.indexOf(insertPlaceholderElement));
+    // 整体移动
+    modeling.moveElements(insertPlaceholderElementNextSiblings, {
+      x: 0,
+      y: targetY - insertPlaceholderElement.y,
+    });
+  }
 }
 
 /**
@@ -566,12 +579,16 @@ export const findPlacePosition = (args, extension) => {
    */
 
   if (prevPlaceholderElement && !isWhetherTheyAreBrothers([prevPlaceholderElement, placeholderElement])) {
-    // 插入中间放置
-    returnResult.placeMode = placeModeEnum.insert;
-    returnResult.insertPlaceholderElement = placeholderElement;
-    returnResult.latestPosition = getReferenceElementUnderPosition(prevPlaceholderElement, latestPosition);
+    const placeholderParentElement = getConnectedParentElement(placeholderElement);
+    // 如果当前占位元素的父级位置高于source的高度，那么就不要中间插入了，继续往下判断
+    if (placeholderParentElement.y >= source.y) {
+      // 插入中间放置
+      returnResult.placeMode = placeModeEnum.insert;
+      returnResult.insertPlaceholderElement = placeholderElement;
+      returnResult.latestPosition = getReferenceElementUnderPosition(prevPlaceholderElement, latestPosition);
 
-    return returnResult;
+      return returnResult;
+    }
   }
 
   if (!nextPlaceholderElement) {
