@@ -140,6 +140,7 @@ export function getNewShapePosition(source, element, elementRegistry, modeling) 
 
 // 放置方式枚举
 const placeModeEnum = {
+  auto: 'auto',
   append: 'append',
   insert: 'insert',
 }
@@ -251,7 +252,6 @@ export const isDesignatedPointAlreadyExists = (args) => {
   const {
     element,
     lastPosition,
-    allShapeElements, 
     targetColumnElements,
   } = args;
 
@@ -348,6 +348,45 @@ export const getBetweenTwoPointsElements = ({targetLeftX, targetRightX}, allShap
   })
 
   return columnElementsSort;
+}
+
+/** 
+ * 根据一角坐标从一列元素集合中，找到上下范畴内想要的相关元素
+ * @param { { x: number; y: number } } targetPosition
+ * @param { element[] } targetColumnElements
+ * @returns 找不到返回undefined
+ */
+export const getTargetPositionInColumnsCorrelationElement = (targetPosition, targetColumnElements) => {
+  const { y } = targetPosition;
+
+  const allTopElements = [];
+  const currentElements = [];
+  const allBottomElements = [];
+
+  let nextElement = undefined;
+  let previousElement = undefined;
+
+  // targetColumnElements 是经过由高至低排序的
+  targetColumnElements.forEach(element => {
+    if (element.y < y) {
+      allTopElements.push(element);
+    } else if (element.y > y) {
+      allBottomElements.push(element);
+    } else {
+      currentElements.push(element);
+    }
+  });
+
+  nextElement = allBottomElements.at(0);
+  previousElement = allTopElements.at(-1);
+
+  return {
+    nextElement,
+    previousElement,
+    allTopElements,
+    currentElements,
+    allBottomElements,
+  }
 }
 
 /**
@@ -615,6 +654,63 @@ export const findPlacePosition = (args, extension) => {
 };
 
 /**
+ * 检查一个空的位置position是否被上下都具有的元素包围着
+ * : 如果确实有被上下存在的元素包围了，就修改当前占位元素为下面那个元素。 然后正常执行放置逻辑
+ * @param {*} args 
+ * @param {*} extension 
+ * @returns boolean
+ */
+export const theWhetherPositionUpAndDownSurround = (args, extension) => {
+  const {
+    source,
+    element,
+    modeling,
+    lastPosition,
+    elementRegistry,
+    allShapeElements,
+    targetColumnElements
+  } = args;
+
+  // 当前列是否存在其它元素
+  const isExistElement = Boolean(targetColumnElements.length);
+
+  if (!isExistElement) {
+    return false;
+  }
+
+  const {
+    nextElement,
+    previousElement,
+    allTopElements,
+    currentElements,
+    allBottomElements,
+  } = getTargetPositionInColumnsCorrelationElement(lastPosition, targetColumnElements);
+
+  if (!previousElement) {
+    return false;
+  }
+
+  if (!nextElement) {
+    return false;
+  }
+
+  if (!isWhetherTheyAreBrothers([previousElement, nextElement])) {
+    return false;
+  }
+
+  // 直接修改内置插件计算的坐标
+  // args.lastPosition = {
+  //   x: nextElement.x,
+  //   y: nextElement.y,
+  // };
+
+  // 直接修改当前占位元素指向
+  extension.placeholderElement = nextElement;
+
+  return true;
+}
+
+/**
  * 1. 
  * 放置前，进行位置信息预判定，预先做一下操作
  */
@@ -639,13 +735,13 @@ export const locationInfoDetermination = (args) => {
     latestPosition: lastPosition, // 新的位置
   }
 
-  // 1. 没有已经存在的占位元素，就直接遵循系统位置放置
-  if(!isExistPlaceholder) {
-    return returnResult;
-  };
-
   const extension = {
     placeholderElement,
+  };
+
+  // 1. 如果没有已经存在的占位元素，而空位置也没有被两个元素上下包围，那么就直接遵循系统位置放置
+  if(!isExistPlaceholder && !theWhetherPositionUpAndDownSurround(args, extension)) {
+    return returnResult;
   };
 
   // 2. 获取新元素的放置方案及放置坐标
