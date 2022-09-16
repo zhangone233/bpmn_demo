@@ -477,6 +477,94 @@ export const getHorizontalLowerAreaElements = (source, allShapeElements) => {
 }
 
 /**
+ * 在指定图形元素集合里筛选出与指定某个元素相关联的所有元素集合
+ * 如果不传elements，则不会进行范围筛选
+ * @param { element } targetElement
+ * @param { element[] } filtrateElements 可选参数
+ * @returns results
+ */
+export const filterConnectionElementAll = (targetElement, filtrateElements) => {
+  const results = [];
+
+  // 找到起始查找根元素
+
+  // 1. 递归寻找所有引入连接的元素
+  // 这一步需要额外把上级的子孙元素也都手动添加进来，不然下面的逻辑不好拿到了
+  const recursionFindIncoming = (currentTargetElement) => {
+    // 结束递归
+    if (!currentTargetElement?.incoming.length) {
+      return;
+    }
+    
+    // 遍历 + 开始递归获取
+    currentTargetElement.incoming.forEach((connectionElement) => {
+      const incomingElement = connectionElement.source;
+      const children = getParentElementChildren(incomingElement);
+      results.push(incomingElement, ...children);
+      recursionFindIncoming(incomingElement);
+    });
+  }
+  // 启动递归
+  recursionFindIncoming(targetElement);
+
+  // 2. 递归寻找所有支出连接的元素
+  const recursionFindOutgoing = (currentTargetElement, findProperty) => {
+    // 结束递归
+    if (!currentTargetElement?.outgoing.length) {
+      return;
+    }
+    
+    // 遍历 + 开始递归获取
+    currentTargetElement.outgoing.forEach((connectionElement) => {
+      const outgoingElement = connectionElement.target;
+      results.includes(outgoingElement) || results.push(outgoingElement);
+      recursionFindOutgoing(outgoingElement);
+    });
+  }
+  // 启动递归
+  recursionFindOutgoing(targetElement);
+
+  // 3. 如果有指定范围集合，那就再过滤一下
+  if (filtrateElements && filtrateElements.length) {
+    const filterResults = results.filter(element => filtrateElements.includes(element));
+    return [...new Set(filterResults)];
+  }
+
+  return [...new Set(results)];
+}
+
+/**
+ * 业务需求函数
+ * 1. 遍历元素集合，获取每一个元素下方位置的所有元素
+ * 2. 将所有元素集合组装成一个新集合，并需要去重
+ */
+export const getLastNeedMoveElements = (relevanceElements, allShapeElements) => {
+  if (!relevanceElements || !relevanceElements.length) {
+    return [];
+  }
+
+  const gatherElements = [];
+  relevanceElements.forEach(relevanceElement => {
+    const betweenTwoPoints = {
+      targetLeftX: relevanceElement.x,
+      targetRightX: relevanceElement.x + relevanceElement.width,
+    };
+    const relevanceColumnElements = getBetweenTwoPointsElements(betweenTwoPoints, allShapeElements);
+
+    const targetPosition = {
+      x: relevanceElement.x,
+      y: relevanceElement.y,
+    };
+    const { allBottomElements } =  getTargetPositionInColumnsCorrelationElement(targetPosition, relevanceColumnElements);
+    gatherElements.push(...allBottomElements);
+  });
+
+  const resultElements = [...new Set(gatherElements.concat(relevanceElements))];
+  console.log(resultElements,'resultElements');
+  return resultElements;
+}
+
+/**
  * 插入放置移动元素
  */
 export const insertPlaceMoveElement = (args, latestPosition, insertPlaceholderElement) => {
@@ -506,6 +594,10 @@ export const insertPlaceMoveElement = (args, latestPosition, insertPlaceholderEl
 
   if (isExistChildren) {
     const horizontalLowerElements = getHorizontalLowerAreaElements(insertPlaceholderElement, allShapeElements);
+
+    // 2022-09-16 : 修改需下移元素的逻辑，改为相关的连线元素及位置在下的元素
+   const lastNeedMoveElements = getLastNeedMoveElements(filterConnectionElementAll(insertPlaceholderElement, horizontalLowerElements), allShapeElements);
+
     modeling.moveElements(horizontalLowerElements, {
       x: 0,
       y: insertPlaceholderElement.height + spaceY, // 一个单位的距离
@@ -516,6 +608,7 @@ export const insertPlaceMoveElement = (args, latestPosition, insertPlaceholderEl
 
   const leftLowerElements = getRightUpperPointToLeftLowerAreaElements(source, allShapeElements);
   const rightLowerElements = getLeftUpperPointToRightLowerAreaElements(insertPlaceholderElement, allShapeElements);
+
 
   modeling.moveElements(leftLowerElements.concat(rightLowerElements), {
     x: 0,
