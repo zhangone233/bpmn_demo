@@ -683,8 +683,9 @@ export const findPlacePosition = (args, extension) => {
 
   if (prevPlaceholderElement && !isWhetherTheyAreBrothers([prevPlaceholderElement, placeholderElement])) {
     const placeholderParentElement = getConnectedParentElement(placeholderElement);
-    // 如果当前占位元素的父级位置高于source的高度，那么就不要中间插入了，继续往下判断
-    if (placeholderParentElement.y >= source.y) {
+
+    // 如果当前占位元素的父级位置高于source的高度，那么就不要中间插入了，继续往下判断 (当前占位没有父级元素直接插入)
+    if (!placeholderParentElement || placeholderParentElement?.y >= source?.y) {
       // 插入中间放置
       returnResult.placeMode = placeModeEnum.insert;
       returnResult.insertPlaceholderElement = placeholderElement;
